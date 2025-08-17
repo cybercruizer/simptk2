@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('dokumens', function (Blueprint $table) {
+        Schema::create('pengumumans', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id')->references('id')->on('users')->onDelete('set null');
-            $table->unsignedBigInteger('usulan_id')->nullable()->references('id')->on('usulans')->onDelete('set null');
-            $table->string('nama_dokumen');
-            $table->text('url_dokumen');
+            $table->string('judul');
+            $table->text('isi');
+            $table->dateTime('tanggal_pengumuman');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->boolean('is_active')->default(true);
+            $table->string('kategori')->unique();
             $table->timestamps();
         });
     }
@@ -26,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('dokumens');
+        Schema::dropIfExists('pengumumans');
     }
 };
