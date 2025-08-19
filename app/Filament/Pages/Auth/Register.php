@@ -70,7 +70,11 @@ class Register extends BaseRegister
             'password' => $data['password'],
             'satpend_npsn' =>$data['satpend_npsn']
         ])->assignRole('operator');
-
+        //send notification to super_admin and induk roles
+        Notification::make()
+            ->title('Pengguna baru terdaftar')
+            ->body("User dengan nama {$data['name']} dengan NPSN {$data['satpend_npsn']} baru saja melakukan registrasi.")
+            ->sendToDatabase(User::role(['super_admin', 'induk', 'cabdin'])->get());
         return $user;
     }
 }
