@@ -2,27 +2,40 @@
 
 namespace App\Filament\Resources\Satpends;
 
-use App\Filament\Resources\Satpends\Pages\CreateSatpend;
-use App\Filament\Resources\Satpends\Pages\EditSatpend;
-use App\Filament\Resources\Satpends\Pages\ListSatpends;
-use App\Filament\Resources\Satpends\Pages\ViewSatpend;
-use App\Filament\Resources\Satpends\Schemas\SatpendForm;
-use App\Filament\Resources\Satpends\Schemas\SatpendInfolist;
-use App\Filament\Resources\Satpends\Tables\SatpendsTable;
-use App\Models\Satpend;
 use BackedEnum;
-use Filament\Resources\Resource;
-use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
+use App\Models\Satpend;
 use Filament\Tables\Table;
+use Filament\Schemas\Schema;
+use Filament\Resources\Resource;
+use Filament\Support\Icons\Heroicon;
+use App\Filament\Resources\Satpends\Pages\EditSatpend;
+use App\Filament\Resources\Satpends\Pages\ViewSatpend;
+use App\Filament\Resources\Satpends\Pages\ListSatpends;
+use App\Filament\Resources\Satpends\Pages\CreateSatpend;
+use App\Filament\Resources\Satpends\Schemas\SatpendForm;
+use App\Filament\Resources\Satpends\Tables\SatpendsTable;
+use App\Filament\Resources\Satpends\Schemas\SatpendInfolist;
+use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 
-class SatpendResource extends Resource
+class SatpendResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = Satpend::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static ?string $recordTitleAttribute = 'Satuan Pendidikan';
+
+    public static function getPermissionPrefixes(): array
+    {
+        return [
+            'view',
+            'view_any',
+            'create',
+            'update',
+            'delete',
+            'delete_any',
+        ];
+    }
 
     public static function form(Schema $schema): Schema
     {

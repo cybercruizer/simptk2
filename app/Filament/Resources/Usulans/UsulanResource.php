@@ -26,17 +26,43 @@ use Filament\Tables\Contracts\HasTable;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Fieldset;
+use Illuminate\Database\Eloquent\Builder;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Forms\Components\DateTimePicker;
 use App\Filament\Resources\Usulans\Pages\ManageUsulans;
+use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 
-class UsulanResource extends Resource
+class UsulanResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = Usulan::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static ?string $recordTitleAttribute = 'Usulan';
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        // Jika user memiliki role operator, batasi hanya record yang dibuat mereka
+        if (!Auth::user()->hasAnyRole(['super_admin', 'cabdin', 'induk'])) {
+            $query->where('created_by', Auth::user()->id);
+        }
+
+        return $query;
+    }
+
+    public static function getPermissionPrefixes(): array
+    {
+        return [
+            'view',
+            'view_any',
+            'create',
+            'update',
+            'delete',
+            'delete_any',
+        ];
+    }
 
     public static function form(Schema $schema): Schema
     {
@@ -319,16 +345,18 @@ class UsulanResource extends Resource
                         'R' => 'heroicon-o-x-mark',
                     }),
                 TextColumn::make('approved_at_1')
+                    ->label('Disetujui pada (cabdin)')
                     ->dateTime()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('rejected_at_1')
+                    ->label('Ditolak pada (cabdin)')
                     ->dateTime()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('approved_by_1')
-                    ->numeric()
+                    ->label('Disetujui oleh (cabdin)')
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('rejected_by_1')
-                    ->numeric()
+                TextColumn::make('rejectedBy1.name')
+                    ->label('Ditolak oleh (cabdin)')
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('status_2')
                     ->label('Status Induk')
@@ -352,22 +380,26 @@ class UsulanResource extends Resource
                         'R' => 'heroicon-o-x-mark',
                     }),
                 TextColumn::make('approved_at_2')
+                    ->label('Disetujui pada (induk)')
                     ->dateTime()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('rejected_at_2')
+                    ->label('Ditolak pada (induk)')
                     ->dateTime()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('approved_by_2')
-                    ->numeric()
+                TextColumn::make('approvedBy2.name')
+                    ->label('Disetujui oleh (induk)')
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('rejected_by_2')
-                    ->numeric()
+                TextColumn::make('rejectedBy2.name')
+                    ->label('Ditolak oleh (induk)')
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')
+                    ->label('Diusulkan pada')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
+                    ->label('Terakhir diubah')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

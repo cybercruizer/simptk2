@@ -3,10 +3,10 @@
 namespace App\Policies;
 
 use App\Models\User;
-use App\Models\Usulan;
+use App\Models\Satpend;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class UsulanPolicy
+class SatpendPolicy
 {
     use HandlesAuthorization;
 
@@ -15,15 +15,15 @@ class UsulanPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_usulans::usulan');
+        return $user->can('view_any_satpends::satpend');
     }
 
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Usulan $usulan): bool
+    public function view(User $user, Satpend $satpend): bool
     {
-        return $user->can('view_usulans::usulan');
+        return $user->can('view_satpends::satpend');
     }
 
     /**
@@ -31,23 +31,23 @@ class UsulanPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('create_usulans::usulan');
+        return $user->can('create_satpends::satpend');
     }
 
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Usulan $usulan): bool
+    public function update(User $user, Satpend $satpend): bool
     {
-        return $user->can('update_usulans::usulan');
+        return $user->can('update_satpends::satpend');
     }
 
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Usulan $usulan): bool
+    public function delete(User $user, Satpend $satpend): bool
     {
-        return $user->can('delete_usulans::usulan');
+        return $user->can('delete_satpends::satpend');
     }
 
     /**
@@ -55,13 +55,13 @@ class UsulanPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_usulans::usulan');
+        return $user->can('delete_any_satpends::satpend');
     }
 
     /**
      * Determine whether the user can permanently delete.
      */
-    public function forceDelete(User $user, Usulan $usulan): bool
+    public function forceDelete(User $user, Satpend $satpend): bool
     {
         return $user->can('{{ ForceDelete }}');
     }
@@ -77,7 +77,7 @@ class UsulanPolicy
     /**
      * Determine whether the user can restore.
      */
-    public function restore(User $user, Usulan $usulan): bool
+    public function restore(User $user, Satpend $satpend): bool
     {
         return $user->can('{{ Restore }}');
     }
@@ -93,7 +93,7 @@ class UsulanPolicy
     /**
      * Determine whether the user can replicate.
      */
-    public function replicate(User $user, Usulan $usulan): bool
+    public function replicate(User $user, Satpend $satpend): bool
     {
         return $user->can('{{ Replicate }}');
     }

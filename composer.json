@@ -8,7 +8,6 @@
     "require": {
         "php": "^8.2",
         "bezhansalleh/filament-shield": "^4.0.0-beta2",
-        "devonab/filament-easy-footer": "^2.1.0-beta",
         "filament/filament": "^4.0",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1"
