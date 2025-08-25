@@ -27,7 +27,10 @@ class Register extends BaseRegister
     {
         return $schema
             ->components([
-                TextInput::make('name'),
+                TextInput::make('name')
+                ->label('Nama Lengkap')
+                    ->required()
+                    ->maxLength(255),
                 TextInput::make('email')
                     ->email()
                     ->required(),
@@ -37,6 +40,7 @@ class Register extends BaseRegister
                     ->minLength(8)
                     ->confirmed(),
                 TextInput::make('password_confirmation')
+                    ->label('Konfirmasi Password')
                     ->password()
                     ->required()
                     ->minLength(8),
@@ -67,19 +71,19 @@ class Register extends BaseRegister
         return Select::make('cabdin')
             ->label('Cabang Dinas')
             ->options([
-                1 => 'I',
-                2 => 'II',
-                3 => 'III',
-                4 => 'IV',
-                5 => 'V',
-                6 => 'VI',
-                7 => 'VII',
-                8 => 'VIII',
-                9 => 'IX',
-                10 => 'X',
-                11 => 'XI',
-                12 => 'XII',
-                13 => 'XIII',
+                1 => '1',
+                2 => '2',
+                3 => '3',
+                4 => '4',
+                5 => '5',
+                6 => '6',
+                7 => '7',
+                8 => '8',
+                9 => '9',
+                10 => '10',
+                11 => '11',
+                12 => '12',
+                13 => '13',
             ])
             ->required();
     }
@@ -94,10 +98,10 @@ class Register extends BaseRegister
             'cabdin' => $data['cabdin'],
         ])->assignRole('operator');
         //send notification to super_admin and induk roles
-        Notification::make()
-            ->title('Pengguna baru terdaftar')
-            ->body("User dengan nama {$data['name']} dengan NPSN {$data['satpend_npsn']} baru saja melakukan registrasi.")
-            ->sendToDatabase(User::role(['super_admin', 'induk', 'cabdin'])->get());
+        // Notification::make()
+        //     ->title('Pengguna baru terdaftar')
+        //     ->body("User dengan nama {$data['name']} dengan NPSN {$data['satpend_npsn']} baru saja melakukan registrasi.")
+        //     ->sendToDatabase(User::role(['super_admin', 'induk', 'cabdin'])->get());
         return $user;
     }
 }

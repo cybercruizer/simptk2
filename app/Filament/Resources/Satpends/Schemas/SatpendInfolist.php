@@ -23,7 +23,8 @@ class SatpendInfolist
                 TextEntry::make('telepon'),
                 TextEntry::make('email')
                     ->label('Email address'),
-                TextEntry::make('status'),
+                TextEntry::make('status')
+                    ->formatStateUsing(fn ($state) => $state === 's' ? 'Swasta' : 'Negeri'),
                 
                 IconEntry::make('is_active')
                     ->label('Status Aktif')

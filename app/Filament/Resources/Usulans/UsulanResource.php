@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Usulans;
 
 use stdClass;
+use UnitEnum;
 use BackedEnum;
 use App\Models\Usulan;
 use Filament\Tables\Table;
@@ -12,6 +13,7 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Resource;
 use Filament\Actions\DeleteAction;
+use Filament\Tables\Filters\Filter;
 use Filament\Forms\Components\Field;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Auth;
@@ -24,15 +26,16 @@ use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Fieldset;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Repeater\TableColumn;
+use Symfony\Component\Console\Descriptor\Descriptor;
 use App\Filament\Resources\Usulans\Pages\ManageUsulans;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
-use Symfony\Component\Console\Descriptor\Descriptor;
-use UnitEnum;
 
 class UsulanResource extends Resource implements HasShieldPermissions
 {
@@ -50,8 +53,13 @@ class UsulanResource extends Resource implements HasShieldPermissions
         // Jika user memiliki role operator, batasi hanya record yang dibuat mereka
         if (!Auth::user()->hasAnyRole(['super_admin', 'cabdin', 'induk'])) {
             $query->where('created_by', Auth::user()->id);
-        }
+        } elseif (Auth::user()->hasRole('cabdin')) {
+            // Jika user memiliki role cabdin, batasi hanya record dengan $record->user->satpend->cabdin sesuai auth()->user()->cabdin
+            $query->whereHas('createdBy.satpend', function (Builder $q) {
+                $q->where('cabdin', Auth::user()->cabdin);
+            });
 
+        }
         return $query;
     }
 
@@ -75,8 +83,8 @@ class UsulanResource extends Resource implements HasShieldPermissions
                     ->default(fn() => Auth::user()->name)
                     ->disabled(),
                 Hidden::make('created_by')
-                ->default(fn()=>auth()->id())
-                ->required(),
+                    ->default(fn() => auth()->id())
+                    ->required(),
                 Select::make('jenis_usulan_id')
                     ->relationship('jenisUsulan', 'nama_usulan')
                     ->reactive()
@@ -91,12 +99,13 @@ class UsulanResource extends Resource implements HasShieldPermissions
                     ->label('Detail permohonan')
                     ->default(null)
                     ->columnSpanFull(),
-                
+
+
                 Textarea::make('jenisUsulan.deskripsi')
                     ->label('Deskripsi Dokumen')
                     ->readOnly()
                     ->rows(4)
-                    ->visible(fn ($get) => filled($get('jenis_usulan_id')))
+                    ->visible(fn($get) => filled($get('jenis_usulan_id')))
                     ->columnSpanFull(),
                 Repeater::make('dokumens')
                     ->label('Dokumen (unggah sesuai deskripsi dokumen di atas)')
@@ -104,13 +113,14 @@ class UsulanResource extends Resource implements HasShieldPermissions
                     ->schema([
                         TextInput::make('nama_dokumen'),
                         TextInput::make('url_dokumen')
-                        ->label('URL Dokumen (gdrive)')
+                            ->label('URL Dokumen (gdrive)')
                     ])
                     ->addable(false)
-                    ->defaultItems(fn ($get) => 
-                        ($jenisUsulan = \App\Models\JenisUsulan::find($get('jenis_usulan_id')))
-                        ? $jenisUsulan->jumlah_dokumen
-                        : 0
+                    ->deletable(false)
+                    ->defaultItems(
+                        fn($get) => ($jenisUsulan = \App\Models\JenisUsulan::find($get('jenis_usulan_id')))
+                            ? $jenisUsulan->jumlah_dokumen
+                            : 0
                     )
                     ->mutateRelationshipDataBeforeCreateUsing(function (array $data): array {
                         $data['user_id'] = auth()->id();
@@ -164,18 +174,18 @@ class UsulanResource extends Resource implements HasShieldPermissions
                                 'P' => 'heroicon-o-clock',
                                 'R' => 'heroicon-o-x-mark',
                             }),
-                        
+
                         TextEntry::make('approved_at_1')
                             ->label('Disetujui pada')
                             ->dateTime()
-                            ->visible(fn ($state):bool => filled($state)),
+                            ->visible(fn($state): bool => filled($state)),
                         TextEntry::make('rejected_at_1')
                             ->label('Ditolak pada')
                             ->dateTime()
-                            ->visible(fn ($state):bool => filled($state)),
+                            ->visible(fn($state): bool => filled($state)),
                         TextEntry::make('reason_rejected_1')
                             ->label('Alasan ditolak')
-                            ->visible(fn ($state):bool => filled($state)),
+                            ->visible(fn($state): bool => filled($state)),
                     ]),
                 Fieldset::make('Status Induk')
                     ->components([
@@ -202,37 +212,40 @@ class UsulanResource extends Resource implements HasShieldPermissions
                         TextEntry::make('approved_at_2')
                             ->label('Disetujui pada')
                             ->dateTime()
-                            ->visible(fn ($state):bool => filled($state)),
+                            ->visible(fn($state): bool => filled($state)),
                         TextEntry::make('rejected_at_2')
                             ->label('Ditolak pada')
                             ->dateTime()
-                            ->visible(fn ($state):bool => filled($state)),
+                            ->visible(fn($state): bool => filled($state)),
                         TextEntry::make('reason_rejected_2')
                             ->label('Alasan ditolak')
-                            ->visible(fn ($state):bool => filled($state)),
+                            ->visible(fn($state): bool => filled($state)),
                     ]),
 
                 Fieldset::make('Dokumen')
                     ->components([
                         Repeater::make('dokumens')
-                            ->label('')
                             ->relationship()
+                            ->table([
+                                TableColumn::make('Nama Dokumen'),
+                                TableColumn::make('URL Dokumen')
+                            ])
                             ->schema([
                                 TextEntry::make('nama_dokumen')
-                                    //->label('Nama Dokumen'),
+                                    ->label('Nama Dokumen')
                                     ->hiddenLabel(),
                                 TextEntry::make('url_dokumen')
-                                    //->label('URL Dokumen')
-                                    ->hiddenLabel()
-                                    ->url(fn ($state) => $state ? url($state) : null)
-                                    ->formatStateUsing(fn ($state) => $state ? url($state) : null)
-                                    ->openUrlInNewTab(),
+                                    ->label('URL Dokumen')
+                                    ->url(fn($state) => $state ? url($state) : null)
+                                    ->formatStateUsing(fn($state) => $state ? url($state) : null)
+                                    ->openUrlInNewTab()
+                                    ->hiddenLabel(),
                             ])
                             ->addable(false)
-                            ->defaultItems(fn ($get) =>
-                                ($jenisUsulan = \App\Models\JenisUsulan::find($get('jenis_usulan_id')))
-                                ? $jenisUsulan->jumlah_dokumen
-                                : 0
+                            ->defaultItems(
+                                fn($get) => ($jenisUsulan = \App\Models\JenisUsulan::find($get('jenis_usulan_id')))
+                                    ? $jenisUsulan->jumlah_dokumen
+                                    : 0
                             )
                             ->columns(2)
                             ->hiddenLabel()
@@ -245,14 +258,28 @@ class UsulanResource extends Resource implements HasShieldPermissions
                             ->color('success')
                             ->icon('heroicon-o-check')
                             ->requiresConfirmation()
-                            ->action(fn ($record) => $record->update([
-                                'status_1' => 'A',
-                                'approved_by_1' => auth()->id(),
-                                'approved_at_1' => now(),
-                                'rejected_at_1' =>null,
-                                'rejected_by_1' =>null,
-                                'reason_rejected_1'=>null,
-                            ])),
+                            ->action(function ($record) {
+                                $record->update([
+                                    'status_1' => 'A',
+                                    'approved_by_1' => auth()->id(),
+                                    'approved_at_1' => now(),
+                                    'rejected_at_1' => null,
+                                    'rejected_by_1' => null,
+                                    'reason_rejected_1' => null,
+                                ]);
+                                // Send notification to usulan->createdBy
+                                $user = $record->createdBy;
+                                if ($user) {
+                                    $user->notify(
+                                        Notification::make()
+                                            ->title('Diterima Cabdin')
+                                            ->body('Usulan dengan ID #' . $record->id . ' telah disetujui oleh cabdin.')
+                                            ->success()
+                                            ->icon('heroicon-o-check-badge')
+                                            ->toDatabase()
+                                    );
+                                }
+                            }),
                         Action::make('reject1')
                             ->label('Tolak')
                             ->color('danger')
@@ -265,16 +292,30 @@ class UsulanResource extends Resource implements HasShieldPermissions
                                     ->maxLength(255)
                                     ->columnSpanFull(),
                             ])
-                            ->action(fn ($record, array $data) => $record->update([
-                                'status_1' => 'R',
-                                'approved_by_1' => null,
-                                'approved_at_1' => null,
-                                'reason_rejected_1' => $data['reason_rejected_1'], 
-                                'rejected_at_1' => now(), 
-                                'rejected_by_1' => auth()->id()
-                                ]))
+                            ->action(function ($record, array $data) {
+                                $record->update([
+                                    'status_1' => 'R',
+                                    'approved_by_1' => null,
+                                    'approved_at_1' => null,
+                                    'reason_rejected_1' => $data['reason_rejected_1'],
+                                    'rejected_at_1' => now(),
+                                    'rejected_by_1' => auth()->id()
+                                ]);
+                                // Send notification to usulan->createdBy
+                                $user = $record->createdBy;
+                                if ($user) {
+                                    $user->notify(
+                                        Notification::make()
+                                            ->title('Ditolak Cabdin')
+                                            ->body('Usulan dengan ID #' . $record->id . ' telah ditolak oleh cabdin. Alasan: ' . $data['reason_rejected_1'])
+                                            ->danger()
+                                            ->icon('heroicon-o-x-mark')
+                                            ->toDatabase()
+                                    );
+                                }
+                            })
                             ->visible(fn() => auth()->user()->hasAnyRole(['cabdin', 'super_admin'])),
-                    ])->visible(fn()=> auth()->user()->hasAnyRole(['cabdin','super_admin'])),
+                    ])->visible(fn() => auth()->user()->hasAnyRole(['cabdin', 'super_admin'])),
                 Fieldset::make('Aksi Induk')
                     ->components([
                         Action::make('accept2')
@@ -282,14 +323,29 @@ class UsulanResource extends Resource implements HasShieldPermissions
                             ->color('success')
                             ->icon('heroicon-o-check')
                             ->requiresConfirmation()
-                            ->action(fn ($record) => $record->update([
-                                'status_2' => 'A', 
-                                'approved_by_2' => auth()->id(), 
-                                'approved_at_2' => now(), 
-                                'rejected_at_2' => null, 
-                                'rejected_by_2' => null, 
-                                'reason_rejected_2' => null
-                            ])),
+                            ->action(function ($record) {
+                                $record->update([
+                                    'status_2' => 'A',
+                                    'approved_by_2' => auth()->id(),
+                                    'approved_at_2' => now(),
+                                    'rejected_at_2' => null,
+                                    'rejected_by_2' => null,
+                                    'reason_rejected_2' => null
+                                ]);
+                                // Send notification to usulan->createdBy
+                                $user = $record->createdBy;
+                                //dd($user);
+                                if ($user) {
+                                    $user->notify(
+                                        Notification::make()
+                                            ->title('Diterima Induk')
+                                            ->body('Usulan dengan ID #' . $record->id . ' telah disetujui oleh induk.')
+                                            ->success()
+                                            ->icon('heroicon-o-check-badge')
+                                            ->toDatabase()
+                                    );
+                                }
+                            }),
                         Action::make('reject2')
                             ->label('Tolak')
                             ->color('danger')
@@ -302,15 +358,29 @@ class UsulanResource extends Resource implements HasShieldPermissions
                                     ->maxLength(255)
                                     ->columnSpanFull(),
                             ])
-                            ->action(fn ($record, array $data) => $record->update([
-                                'status_2' => 'R',
-                                'approved_by_2' => null,
-                                'approved_at_2' => null,
-                                'reason_rejected_2' => $data['reason_rejected_2'], 
-                                'rejected_at_2' => now(), 
-                                'rejected_by_2' => auth()->id()
-                                ]))
-                    ])->visible(fn()=> auth()->user()->hasAnyRole(['induk','super_admin'])),
+                            ->action(function ($record, array $data) {
+                                $record->update([
+                                    'status_2' => 'R',
+                                    'approved_by_2' => null,
+                                    'approved_at_2' => null,
+                                    'reason_rejected_2' => $data['reason_rejected_2'],
+                                    'rejected_at_2' => now(),
+                                    'rejected_by_2' => auth()->id()
+                                ]);
+                                // Send notification to usulan->createdBy
+                                $user = $record->createdBy;
+                                if ($user) {
+                                    $user->notify(
+                                        Notification::make()
+                                            ->title('Ditolak Induk')
+                                            ->body('Usulan dengan ID #' . $record->id . ' telah ditolak oleh induk. Alasan: ' . $data['reason_rejected_2'])
+                                            ->danger()
+                                            ->icon('heroicon-o-x-mark')
+                                            ->toDatabase()
+                                    );
+                                }
+                            })
+                    ])->visible(fn() => auth()->user()->hasAnyRole(['induk', 'super_admin'])),
             ])->columns(2);
     }
 
@@ -333,7 +403,12 @@ class UsulanResource extends Resource implements HasShieldPermissions
                     ->sortable(),
                 TextColumn::make('createdBy.name')
                     ->label('Diusulkan oleh')
+                    ->description(fn($record) => $record->createdBy->satpend->nama_satpend ?? '-')
                     ->searchable(),
+                TextColumn::make('createdBy.satpend.cabdin')
+                    ->label('Cabdin')
+                    ->visible(fn() => Auth::user()->hasAnyRole(['super_admin', 'induk']))
+                    ->numeric(),
                 TextColumn::make('jenisUsulan.nama_usulan')
                     ->label('Jenis Usulan')
                     ->numeric()
@@ -419,8 +494,38 @@ class UsulanResource extends Resource implements HasShieldPermissions
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->defaultSort('created_at','desc')
             ->filters([
-                //
+                Filter::make('createdBy.satpend.cabdin')
+                    ->label('Cabdin')
+                    ->visible(fn() => Auth::user()->hasAnyRole(['super_admin', 'induk']))
+                    ->schema([
+                        Select::make('cabdin')
+                            ->options([
+                                1 => '1',
+                                2 => '2',
+                                3 => '3',
+                                4 => '4',
+                                5 => '5',
+                                6 => '6',
+                                7 => '7',
+                                8 => '8',
+                                9 => '9',
+                                10 => '10',
+                                11 => '11',
+                                12 => '12',
+                                13 => '13',
+                            ])
+                            ->placeholder('Pilih Cabdin')
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            $data['cabdin'],
+                            fn (Builder $query, $cabdin): Builder => $query->whereHas('createdBy.satpend', function (Builder $q) use ($cabdin) {
+                                $q->where('cabdin', $cabdin);
+                            })
+                        );
+                    }),
             ])
             ->recordActions([
                 ViewAction::make(),

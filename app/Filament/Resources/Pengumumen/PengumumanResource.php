@@ -104,19 +104,21 @@ class PengumumanResource extends Resource
         return $table
             ->recordTitleAttribute('Pengumuman')
             ->columns([
+                TextColumn::make('tanggal_pengumuman')
+                    ->dateTime()
+                    ->sortable(),
+                    //->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('user.name')
                     ->label('Pengumuman oleh')
                     ->sortable(),
                 TextColumn::make('judul')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('tanggal_pengumuman')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+            
                 TextColumn::make('kategori')
                     ->sortable(),
             ])
+            ->defaultSort('tanggal_pengumuman','desc')
             ->filters([
                 //
             ])

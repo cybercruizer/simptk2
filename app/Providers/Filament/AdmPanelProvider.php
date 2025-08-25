@@ -31,7 +31,10 @@ class AdmPanelProvider extends PanelProvider
             ->path('adm')
             ->login()
             ->profile()
-            ->registration(Register::class)
+            ->when(
+                env('APP_REGISTRATION_ENABLED', true),
+                fn ($panel) => $panel->registration(Register::class)
+            )
             ->colors([
                 'primary' => Color::Amber,
             ])
@@ -45,7 +48,7 @@ class AdmPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
                 AccountWidget::class,
-                FilamentInfoWidget::class,
+                //FilamentInfoWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
