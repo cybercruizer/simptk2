@@ -41,6 +41,7 @@ class Register extends BaseRegister
                     ->required()
                     ->minLength(8),
                 $this->getSatpendComponent(),
+                $this->getCabdinComponent(),
             ])->columns(1);
     }
 
@@ -61,6 +62,27 @@ class Register extends BaseRegister
             ->required()
             ->label('Satpend');
     }
+    protected function getCabdinComponent(): Component
+    {
+        return Select::make('cabdin')
+            ->label('Cabang Dinas')
+            ->options([
+                1 => 'I',
+                2 => 'II',
+                3 => 'III',
+                4 => 'IV',
+                5 => 'V',
+                6 => 'VI',
+                7 => 'VII',
+                8 => 'VIII',
+                9 => 'IX',
+                10 => 'X',
+                11 => 'XI',
+                12 => 'XII',
+                13 => 'XIII',
+            ])
+            ->required();
+    }
 
     protected function handleRegistration(array $data): Model
     {
@@ -68,7 +90,8 @@ class Register extends BaseRegister
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => $data['password'],
-            'satpend_npsn' =>$data['satpend_npsn']
+            'satpend_npsn' =>$data['satpend_npsn'],
+            'cabdin' => $data['cabdin'],
         ])->assignRole('operator');
         //send notification to super_admin and induk roles
         Notification::make()

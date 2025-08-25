@@ -12,6 +12,7 @@ class Satpend extends Model
     protected $primaryKey = 'npsn';
     protected $fillable= [
         'nama_satpend',
+        'cabdin',
         'alamat',
         'kecamatan_id',
         'kabupaten_id',

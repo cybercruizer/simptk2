@@ -30,6 +30,7 @@ class AdmPanelProvider extends PanelProvider
             ->id('adm')
             ->path('adm')
             ->login()
+            ->profile()
             ->registration(Register::class)
             ->colors([
                 'primary' => Color::Amber,

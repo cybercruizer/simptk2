@@ -16,12 +16,14 @@ use App\Filament\Resources\Satpends\Schemas\SatpendForm;
 use App\Filament\Resources\Satpends\Tables\SatpendsTable;
 use App\Filament\Resources\Satpends\Schemas\SatpendInfolist;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
+use UnitEnum;
 
 class SatpendResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = Satpend::class;
+    protected static string | UnitEnum | null $navigationGroup = 'Data Dasar';
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingLibrary;
 
     protected static ?string $recordTitleAttribute = 'Satuan Pendidikan';
 

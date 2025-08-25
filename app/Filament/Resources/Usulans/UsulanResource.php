@@ -31,12 +31,15 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Forms\Components\DateTimePicker;
 use App\Filament\Resources\Usulans\Pages\ManageUsulans;
 use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
+use Symfony\Component\Console\Descriptor\Descriptor;
+use UnitEnum;
 
 class UsulanResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = Usulan::class;
+    protected static string | UnitEnum | null $navigationGroup = 'Usulan';
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentDuplicate;
 
     protected static ?string $recordTitleAttribute = 'Usulan';
 
@@ -82,15 +85,26 @@ class UsulanResource extends Resource implements HasShieldPermissions
                         $jenisUsulan = \App\Models\JenisUsulan::find($state);
                         $jumlahDokumen = $jenisUsulan?->jumlah_dokumen ?? 0;
                         $set('dokumens', array_fill(0, $jumlahDokumen, []));
+                        $set('jenisUsulan.deskripsi', $jenisUsulan?->deskripsi ?? null);
                     }),
                 Textarea::make('keterangan')
+                    ->label('Detail permohonan')
                     ->default(null)
                     ->columnSpanFull(),
+                
+                Textarea::make('jenisUsulan.deskripsi')
+                    ->label('Deskripsi Dokumen')
+                    ->readOnly()
+                    ->rows(4)
+                    ->visible(fn ($get) => filled($get('jenis_usulan_id')))
+                    ->columnSpanFull(),
                 Repeater::make('dokumens')
+                    ->label('Dokumen (unggah sesuai deskripsi dokumen di atas)')
                     ->relationship()
                     ->schema([
                         TextInput::make('nama_dokumen'),
                         TextInput::make('url_dokumen')
+                        ->label('URL Dokumen (gdrive)')
                     ])
                     ->addable(false)
                     ->defaultItems(fn ($get) => 
@@ -102,7 +116,8 @@ class UsulanResource extends Resource implements HasShieldPermissions
                         $data['user_id'] = auth()->id();
                         return $data;
                     })
-                    ->grid(2)
+                    ->columns(2)
+                    //->grid(2)
                     ->columnSpanFull()
             ]);
     }

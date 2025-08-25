@@ -18,15 +18,16 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Forms\Components\DateTimePicker;
 use App\Filament\Resources\Users\Pages\ManageUsers;
 use Dom\Text;
+use UnitEnum;
 
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
+    protected static string | UnitEnum | null $navigationGroup = 'Data Dasar';
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
 
     protected static ?string $recordTitleAttribute = 'User Management';
 

@@ -18,12 +18,14 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use UnitEnum;
 
 class JenisUsulanResource extends Resource
 {
     protected static ?string $model = JenisUsulan::class;
+    protected static string | UnitEnum | null $navigationGroup = 'Usulan';
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentText;
 
     protected static ?string $recordTitleAttribute = 'Jenis Usulan';
 
@@ -37,6 +39,7 @@ class JenisUsulanResource extends Resource
                     ->required()
                     ->numeric(),
                 Textarea::make('deskripsi')
+                    ->label('Deskripsi Dokumen')
                     ->default(null)
                     ->columnSpanFull(),
             ]);
@@ -50,6 +53,7 @@ class JenisUsulanResource extends Resource
                 TextEntry::make('jumlah_dokumen')
                     ->numeric(),
                 TextEntry::make('deskripsi')
+                    ->label('Deskripsi Dokumen')
                     ->columnSpanFull()
                     ->markdown(),
 
